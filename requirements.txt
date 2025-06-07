@@ -2,4 +2,3 @@ opencv-python
 streamlit
 streamlit-webrtc
 numpy
-pip install --upgrade pip
