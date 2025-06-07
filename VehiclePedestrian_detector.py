@@ -23,11 +23,11 @@ class FaceDetectionTransformer(VideoTransformerBase):
     
 
     st.set_page_config(page_title="Live Face Detection", layout="centered")
-st.title("📸 Real-time Face & Eye Detection")
+st.title("Real-time Vehicle & Pedestrian Detection")
 
-st.markdown("This app uses your webcam to detect faces and eyes in real-time.")
+st.markdown("This app uses your webcam to detect vehicles and pedestrian in real-time")
 webrtc_streamer(
-    key="face-detection",
+    key="V&P-detection",
     video_transformer_factory=FaceDetectionTransformer,
     media_stream_constraints={"video": True, "audio": False},
 )
