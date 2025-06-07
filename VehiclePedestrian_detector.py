@@ -1,34 +1,46 @@
 import cv2
-
 import numpy as np
 import streamlit as st
 from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
-veh_detector = cv2.CascadeClassifier("haarcascade_car.xml")
-ped_detector = cv2.CascadeClassifier("haarcascade_fullbody.xml")
-class FaceDetectionTransformer(VideoTransformerBase):
+
+# -------------------- Streamlit Page Setup --------------------
+st.set_page_config(page_title="Vehicle & Pedestrian Detection", layout="centered")
+st.title("🚗 Real-time Vehicle & Pedestrian Detection")
+st.markdown("This app uses your webcam to detect **vehicles** and **pedestrians** in real-time using OpenCV's Haar cascades.")
+
+# -------------------- Load Haar Cascade Classifiers --------------------
+# Ensure these XML files are in your working directory or provide full paths
+vehicle_cascade_path = "haarcascade_car.xml"
+pedestrian_cascade_path = "haarcascade_fullbody.xml"
+
+# Load the trained classifiers
+veh_detector = cv2.CascadeClassifier(vehicle_cascade_path)
+ped_detector = cv2.CascadeClassifier(pedestrian_cascade_path)
+
+# -------------------- Define Transformer Class --------------------
+class VehiclePedestrianDetection(VideoTransformerBase):
     def transform(self, frame):
+        # Convert frame to OpenCV BGR format
         image = frame.to_ndarray(format="bgr24")
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        vehicle = veh_detector.detectMultiScale(gray, 1.3, 5)
-        for (x, y, w, h) in vehicle:
+        # Detect vehicles
+        vehicles = veh_detector.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
+        for (x, y, w, h) in vehicles:
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            cv2.putText(image, "Vehicle", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-        
-        pedestrian = ped_detector.detectMultiScale(gray)
-        for (ex, ey, ew, eh) in pedestrian:
-            cv2.rectangle(image, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
+        # Detect pedestrians
+        pedestrians = ped_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3)
+        for (x, y, w, h) in pedestrians:
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(image, "Pedestrian", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         return image
-    
 
-    st.set_page_config(page_title="Live Face Detection", layout="centered")
-st.title("Real-time Vehicle & Pedestrian Detection")
-
-st.markdown("This app uses your webcam to detect vehicles and pedestrian in real-time")
+# -------------------- Start Webcam Stream --------------------
 webrtc_streamer(
-    key="V&P-detection",
-    video_transformer_factory=FaceDetectionTransformer,
+    key="vehicle-pedestrian-detection",
+    video_transformer_factory=VehiclePedestrianDetection,
     media_stream_constraints={"video": True, "audio": False},
 )
-
